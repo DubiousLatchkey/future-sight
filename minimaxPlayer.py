@@ -10,15 +10,19 @@ from poke_env.player.player import Player
 from poke_env.environment.move_category import MoveCategory
 from GameNode import GameNode
 from poke_env.environment.pokemon import Pokemon
-
+import os
 import random
 
 class MinimaxPlayer(Player): 
 
     def __init__(self, battle_format, use_random):
         self.useRandom = use_random
-        super().__init__(battle_format=battle_format)
-        
+        super().__init__(battle_format=battle_format )
+        self._save_replays = "trainingReplays/" + self.username + "/"
+        if(not os.path.exists("trainingReplays/") ):
+            os.mkdir("trainingReplays/")
+        if(not os.path.exists("trainingReplays/" + self.username + "/") ):
+            os.mkdir("trainingReplays/"+ self.username + "/")
 
     previous_action = None
     maxDepth = 1 

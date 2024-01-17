@@ -163,3 +163,10 @@ pokemon-showdown/
 gameStates/
 onlineReplays/
 onlineReplayMoveSentences/
+randomTeams/
+config.py
+prompts/
+trainingReplays/
+checkpoints/
+
+pokemonBattleData.pickle

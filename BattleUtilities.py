@@ -174,11 +174,14 @@ def dump_battle_data(battle: AbstractBattle, action: BattleOrder):
     if(type(action) is DefaultBattleOrder):
         battle_data["action"] = None
         battle_data["action_type"] = None
+        battle_data["terrastallize"] = False
     elif(type(action.order) is Move):
         battle_data["action"] = action.order.id
         battle_data["action_type"] = "move"
+        battle_data["terrastallize"] = action.terastallize
     elif(type(action.order) is Pokemon):
         battle_data["action_type"] = "switch"
+        battle_data["terrastallize"] = False
         battle_data["action"] = action.order._species # Somewhat off from identifier, got to figure out how to get it
 
 

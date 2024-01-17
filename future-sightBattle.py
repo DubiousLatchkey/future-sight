@@ -3,6 +3,8 @@ from poke_env.player import Player, RandomPlayer
 from minimaxPlayer import MinimaxPlayer
 import asyncio
 import time
+from llmPlayer import LLMPlayer
+from NNPlayer import NNPlayer
 
 # No authentication required
 #my_account_config = AccountConfiguration("guy_1", None)
@@ -16,19 +18,20 @@ async def main():
 
     # We create two players.
     random_player = MinimaxPlayer(
-        battle_format="gen9randombattle", use_random=True
+        battle_format="gen8randombattle", use_random=False
     )
-    minimax_player = MinimaxPlayer(
-        battle_format="gen9randombattle", use_random=False
+    nnPlayer = LLMPlayer(
+        battle_format="gen8randombattle"
     )
 
     # Now, let's evaluate our player
-    await minimax_player.battle_against(random_player, n_battles=2)
+    battles=1
+    await nnPlayer.battle_against(random_player, n_battles=battles)
 
     print(
-        "Minimax player won %d / 2 battles [this took %f seconds]"
+        "LLM player won %d / %d battles [this took %f seconds]"
         % (
-            minimax_player.n_won_battles, time.time() - start
+            nnPlayer.n_won_battles, battles, time.time() - start
         )
     )
 

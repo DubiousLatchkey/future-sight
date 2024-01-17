@@ -5,23 +5,26 @@ import json
 import os
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
+from torch.utils.data import DataLoader, Dataset
+import pickle
 from sklearn.manifold import TSNE
 
+# for filename in os.listdir("randomTeams/"):
+#     with open("randomTeams/" + filename) as f:
+#         text = f.read()
+#         if("maushold" in text):
+#             print(text)
 
-# Thanks Olga Chernytska
+pokemonToId = {}
+idToPokemon = {}
 
-SKIPGRAM_N_WORDS = 4
-MAX_SEQUENCE_LENGTH = 256
-from torch.utils.data import DataLoader, Dataset
-
-
-class Move_SkipGram_Model(nn.Module):
+class Pokemon_SkipGram_Model(nn.Module):
     """
     Implementation of Skip-Gram model described in paper:
     https://arxiv.org/abs/1301.3781
     """
     def __init__(self, vocab_size: int):
-        super(Move_SkipGram_Model, self).__init__()
+        super(Pokemon_SkipGram_Model, self).__init__()
         self.embeddings = nn.Embedding(
             num_embeddings=vocab_size,
             embedding_dim=128,
@@ -36,17 +39,37 @@ class Move_SkipGram_Model(nn.Module):
         x = self.embeddings(inputs_)
         x = self.linear(x)
         return x
-    
-class MoveSentenceDataset(Dataset):
-    """Dataset of move sentences"""
+   
+class PokemonTeamsDataSet(Dataset):
+    """Dataset of teams"""
 
     def __init__(self, transform=None):
         self.transform = transform
 
+        teams = []
         self.data = []
-        for filename in os.listdir("onlineReplayMoveSentences/"):
-            with open("onlineReplayMoveSentences/" + filename) as f:
-                self.data += windowizer(f.read().split(" "))
+        self.uniquePokemon = set()
+        for filename in os.listdir("randomTeams/"):
+            with open("randomTeams/" + filename) as f:
+                team = f.read().split(" ")
+                self.uniquePokemon = self.uniquePokemon.union(set(team))
+                teams.append(team)
+
+        count = 1
+        for pokemon in sorted(list(self.uniquePokemon)):
+            pokemonToId[pokemon] = count
+            count += 1
+        pokemonToId["<unk>"] = 0
+
+        
+        for i in pokemonToId.items():
+            idToPokemon[i[1]] = i[0]
+
+        #print(idToPokemon, pokemonToId)
+        print("number of teams:",len(teams))
+        for team in teams:
+            self.data += makeTeamSkipGrams(team)
+        print("number of skipgrams:",len(self.data))
 
     def __len__(self):
         return len(self.data)
@@ -61,36 +84,22 @@ class MoveSentenceDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
-    
-def indexToOneHotTensor(moveIndex, totalMoves):
-    tensor = torch.zeros(totalMoves)  
-    tensor[moveIndex] = 1
-    return tensor
+        
+
+def processPokemonName(pokemon):
+    return pokemon.lower().replace(" ", "").replace("-", "").replace(",", "")
 
 
-moveToIndex = {}
+def makeTeamSkipGrams(team):
+    skipgrams = []
+    for index in range(len(team)):
+        pokemon = team[index]
+        for otherPokemon in team[:index] + team[index + 1:]:
+            #print(pokemon, otherPokemon)
+            skipgrams.append((torch.tensor(pokemonToId[pokemon], dtype=torch.long), torch.tensor(pokemonToId[otherPokemon], dtype=torch.long)))
 
-# Thanks Musashi Hinck
-def windowizer(row, wsize=4):
-    """
-    Windowizer function for Word2Vec. Converts sentence to sliding-window
-    pairs.
-    """
-    if(len(row) <= 1):
-        return []
-    doc = row
-    out = []
-    for i, wd in enumerate(doc):
-        target = moveToIndex[wd]
-        window = [i+j for j in
-                  range(-wsize, wsize+1, 1)
-                  if (i+j>=0) &
-                     (i+j<len(doc)) &
-                     (j!=0)]
+    return skipgrams
 
-        out+=[(torch.tensor(target, dtype=torch.long), torch.tensor(moveToIndex[doc[w]], dtype=torch.long)) for w in window]
-    row = out
-    return row
 
 def train(training_dataloader, model, loss_function, optimizer, epochs):
     training_losses = []
@@ -129,57 +138,43 @@ def get_distance_matrix(wordvecs, metric):
     return dist_matrix
 
 def get_k_similar_words(word, dist_matrix, k=10):
-    idx = moveToIndex[word]
+    idx = pokemonToId[word]
     dists = dist_matrix[idx]
     ind = np.argpartition(dists, k)[:k+1]
     ind = ind[np.argsort(dists[ind])][1:]
-    out = [(i, indexToMove[i], dists[i]) for i in ind]
+    out = [(i, idToPokemon[i], dists[i]) for i in ind]
     return out
     
-torch.manual_seed(1)
-
-with open("venv\Lib\site-packages\poke_env\data\static\moves\gen9moves.json") as f:
-    data = json.load(f)
-    count = 1
-    for i in data:
-        moveToIndex[i] = count
-        count += 1
-    moveToIndex["<unk>"] = 0
-
-indexToMove = {}
-for i in moveToIndex.items():
-    indexToMove[i[1]] = i[0]
 
 if __name__ == "__main__":
+    torch.manual_seed(1)
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('Using {} device'.format(device))
 
-    dataset = MoveSentenceDataset()
 
-    #print(dataset.__getitem__(5), dataset.__getitem__(6))
-    #print(indexToMove[dataset.__getitem__(5)[0]], indexToMove[dataset.__getitem__(5)[1]])
 
-    model = Move_SkipGram_Model(len(moveToIndex.keys())).to(device)
-
+    dataset = PokemonTeamsDataSet()
+    print("Number of pokemon forms:", len(pokemonToId.keys()))
+    # Train
+    model = Pokemon_SkipGram_Model(vocab_size=len(pokemonToId.keys())).to(device)
     dataloader = DataLoader(dataset=dataset, batch_size=32, shuffle=True)
-
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_function = nn.CrossEntropyLoss()
 
-    # training
     model, t_loss, t_a,= train(dataloader, model, loss_function, optimizer, 10)
 
     plt.plot(range(10), t_loss, label="training")
-    plt.savefig("moveLoss.png")
-    torch.save(model.state_dict(), "moveModel.pt")
+    plt.savefig("pokemonLoss.png")
+    torch.save(model.state_dict(), "pokemonModel.pt")
     plt.clf()
 
-    # testing
-    model.load_state_dict(torch.load("moveModel.pt"))
+    # Test
+    model.load_state_dict(torch.load("pokemonModel.pt"))
     wordvecs = model.linear.weight.cpu().detach().numpy()
     dmat = get_distance_matrix(wordvecs, 'cosine')
 
-    tokens = ['toxic', 'thunderbolt', 'thunder', 'protect', 'sunnyday', 'counter']
+    tokens = ['maushold', 'blissey', 'arceusgrass', 'arceuswater', 'mausholdfour']
     for word in tokens:
         print(word, [t[1] for t in get_k_similar_words(word, dmat)], "\n")
 
@@ -189,6 +184,9 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(32, 32))
     for idx in range(len(embed_tsne)):
         plt.scatter(*embed_tsne[idx, :], color='steelblue')
-        plt.annotate(indexToMove[idx], (embed_tsne[idx, 0], embed_tsne[idx, 1]), alpha=0.7)
+        plt.annotate(idToPokemon[idx], (embed_tsne[idx, 0], embed_tsne[idx, 1]), alpha=0.7)
 
-    plt.savefig("moveEmbedding.png")
+    plt.savefig("pokemonEmbedding.png")
+
+    with open("pokemonToId.pickle", "wb") as f:
+        pickle.dump(pokemonToId, f, protocol=pickle.HIGHEST_PROTOCOL)
