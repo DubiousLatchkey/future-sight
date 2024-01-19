@@ -7,6 +7,7 @@ from poke_env.environment.side_condition import SideCondition
 from difflib import SequenceMatcher
 import os
 import json
+import time
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -26,9 +27,9 @@ def findSimilar(fullText, search, requiredRatio=0.9):
     return False
 
 typeMatchups = '''
-The type matchups are:,,Defending type,
+The type matchups are:
 ,,Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy
-Attacking type,Normal,1x,1x,1x,1x,1x,0.5x,1x,0x,0.5x,1x,1x,1x,1x,1x,1x,1x,1x,1x
+,Normal,1x,1x,1x,1x,1x,0.5x,1x,0x,0.5x,1x,1x,1x,1x,1x,1x,1x,1x,1x
 ,Fighting,2x,1x,0.5x,0.5x,1x,2x,0.5x,0x,2x,1x,1x,1x,1x,0.5x,2x,1x,2x,0.5x
 ,Flying,1x,2x,1x,1x,1x,0.5x,2x,1x,0.5x,1x,1x,2x,0.5x,1x,1x,1x,1x,1x
 ,Poison,1x,1x,1x,0.5x,0.5x,0.5x,1x,0.5x,0x,1x,1x,2x,1x,1x,1x,1x,1x,2x
@@ -47,10 +48,12 @@ Attacking type,Normal,1x,1x,1x,1x,1x,0.5x,1x,0x,0.5x,1x,1x,1x,1x,1x,1x,1x,1x,1x
 ,Dark,1x,0.5x,1x,1x,1x,1x,1x,2x,1x,1x,1x,1x,1x,2x,1x,1x,0.5x,0.5x
 ,Fairy,1x,2x,1x,0.5x,1x,1x,1x,1x,0.5x,0.5x,1x,1x,1x,1x,1x,2x,2x,1x
 
+where the attacking type is shown in the rows with the defending type in the columns
+For Pokemon of multiple types, effectiveness is multiplicatively added (for example 2x and 2x is 4x and 0.5x and 2x is 1x)
 '''
 class LLMPlayer(Player): 
 
-    def __init__(self, battle_format):
+    def __init__(self, battle_format, usingAssistant=True):
         super().__init__(battle_format=battle_format)
 
         self.client = OpenAI(
@@ -64,13 +67,18 @@ class LLMPlayer(Player):
         with open("venv\Lib\site-packages\poke_env\data\static\pokedex\gen8pokedex.json") as f:
             self.pokemonData = json.load(f)
         
-        
+        self.usingAssistant = usingAssistant
+
+        # Assistants require getting the asssistant and making a thread
+        if(usingAssistant):
+            self.assistant = self.client.beta.assistants.retrieve( assistant_id="asst_1vXPZEKgnSDRaesCCXkFiFom")
+            self.thread = self.client.beta.threads.create()
         
 
     def convertPartyPokemonToPrompt(self, identifier: str, pokemon: Pokemon):
         promptText = ""
         promptText += " ".join(identifier.split(" ")[1:]) + " "
-        promptText += str(pokemon.current_hp) + "/" + str(pokemon.max_hp) + " hp\n"
+        promptText += str(pokemon.current_hp) + "/" + str(pokemon.max_hp) + " hp (fraction of total)\n"
         promptText += "type(s): " + pokemon.type_1.name.lower() + " "
         if(pokemon.type_2):
             promptText += pokemon.type_2.name.lower() + "\n"
@@ -165,8 +173,8 @@ class LLMPlayer(Player):
         print("No action found in response")
         return self.choose_random_move(battle)
     
-    def getMoveFromChatCompletionJSON(self, chat_completion, battle):
-        actionObject = json.loads(chat_completion.choices[0].message.content)
+    def getMoveFromJSON(self, jsonObject, battle):
+        actionObject = jsonObject
 
         if(actionObject["action_type"] == "move"):
             moveChoice = actionObject["move"].lower().replace(" ", "").replace("-", "") + " "
@@ -238,9 +246,11 @@ class LLMPlayer(Player):
         prompt += "Your active pokemon is " + self.convertActivePokemonToPrompt(activePokemon[0], activePokemon[1])
         prompt += "Your oppoent's active pokemon is " + self.convertActivePokemonToPrompt(opponentActivePokemon[0], opponentActivePokemon[1])
 
-        prompt += typeMatchups
+        if(not self.usingAssistant):
+            prompt += typeMatchups
+            prompt += "Evaluate which types are super effective against the opposing pokemon and your own active pokemon and then choose the best action from the following \n"
 
-        prompt += "Evaluate which types are super effective against the opposing pokemon and your own active pokemon and then choose the best action from the following \n"
+        prompt += "Choose the best action from the following \n"
 
         #prompt += str(battle.available_moves)
         if(battle.available_moves):
@@ -251,34 +261,78 @@ class LLMPlayer(Player):
             for switch in battle.available_switches:
                 prompt += "switch to " +str(switch.species) + "\n"
         prompt += "\n"
-        prompt += "Respond in a JSON of an \"explanation\" field with a string of an evaluation of the actions to take, whether it is a move or switch in the field \"action_type\" with the string \"move\" representing a move and \"switch\" representing a switch, the move to use or pokemon to switch to in fields \"move\" and \"pokemon\", and then whether or not to dynamax as a boolean"
+
+        # If not using Absol assistant, needs this
+        if(not self.usingAssistant):
+            prompt += "Respond in a JSON of an \"explanation\" field with a string of an evaluation of the actions to take, whether it is a move or switch in the field \"action_type\" with the string \"move\" representing a move and \"switch\" representing a switch, the move to use or pokemon to switch to in fields \"move\" and \"pokemon\", and then whether or not to dynamax as a boolean"
 
         if(not self.tried and len(battle.available_moves) > 0):
             #print(prompt)
             #self.tried = True
-            try:
-                chat_completion = self.client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                    ],
-                    response_format={ "type": "json_object" },
-                    model="gpt-4-1106-preview",
-                    timeout=20.0
+            if(self.usingAssistant):
+                #Use assistant
+                message = self.client.beta.threads.messages.create(
+                    thread_id=self.thread.id,
+                    role="user",
+                    content=prompt
                 )
-            except:
-                print("api timeout")
-                return self.choose_random_move(battle)
+                
+                run = self.client.beta.threads.runs.create(
+                thread_id=self.thread.id,
+                assistant_id=self.assistant.id,
+                )
+                while(True):
+                    run = self.client.beta.threads.runs.retrieve(
+                    thread_id=self.thread.id,
+                    run_id=run.id
+                    )
+                    if(run.status == "completed"):
+                        break
+                    else:
+                        print("Waiting...")
+                        time.sleep(1)
 
-            if(not os.path.exists("prompts/" + battle._battle_tag + "/") ):
-                os.mkdir("prompts/" + battle._battle_tag + "/")
+                messages = self.client.beta.threads.messages.list(
+                    thread_id=self.thread.id
+                    )
+                if(not os.path.exists("prompts/" + battle._battle_tag + "/") ):
+                    os.mkdir("prompts/" + battle._battle_tag + "/")
 
-            with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+") as f:
-                f.write(prompt + "\n" + chat_completion.choices[0].message.content)
+                with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+") as f:
+                    f.write(prompt + "\n" + messages.data[0].content[0].text.value)
 
-            return self.getMoveFromChatCompletionJSON(chat_completion=chat_completion, battle=battle)
+                                
+                rawString = messages.data[0].content[0].text.value
+                startIndex = rawString.index("```json")
+                endIndex = rawString[startIndex + 7:].index("```")
+                data = json.loads(rawString[startIndex + 7: startIndex + 7 + endIndex])
+
+                return self.getMoveFromJSON(jsonObject=data, battle=battle)
+            else:
+                #Using default chatgpt
+                try:
+                    chat_completion = self.client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        }
+                        ],
+                        response_format={ "type": "json_object" },
+                        model="gpt-4-1106-preview",
+                        timeout=20.0
+                    )
+                except:
+                    print("api timeout")
+                    return self.choose_random_move(battle)
+
+                if(not os.path.exists("prompts/" + battle._battle_tag + "/") ):
+                    os.mkdir("prompts/" + battle._battle_tag + "/")
+
+                with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+") as f:
+                    f.write(prompt + "\n" + chat_completion.choices[0].message.content)
+
+            return self.getMoveFromJSON(chat_completion=json.loads(chat_completion.choices[0].message.content), battle=battle)
         
         return self.choose_random_move(battle)
 

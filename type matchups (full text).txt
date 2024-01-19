@@ -1,0 +1,214 @@
+Normal-type moves:
+
+Super Effective Against (2x damage): None. Normal-type moves don't have any type they are particularly effective against.
+Not Very Effective Against (0.5x damage): Rock, Steel. Normal-type moves are less effective against these types.
+No Effect Against (0x damage): Ghost. Normal-type moves can't hit Ghost-type Pokémon.
+Normal-type Pokémon defenses:
+
+Weak Against (2x damage from): Fighting. Normal-type Pokémon are vulnerable to Fighting-type moves.
+Resistant Against (0.5x damage from): None. Normal types don't have any resistances to specific move types.
+Immune Against (0x damage from): Ghost. Ghost-type moves can't hit Normal-type Pokémon.
+
+Fighting-type moves:
+
+Super Effective Against (2x damage): Normal, Ice, Rock, Dark, Steel. Fighting-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Flying, Poison, Bug, Psychic, Fairy. Fighting-type moves are less effective against these types.
+No Effect Against (0x damage): Ghost. Fighting-type moves can't hit Ghost-type Pokémon.
+Fighting-type Pokémon defenses:
+
+Weak Against (2x damage from): Flying, Psychic, Fairy. Fighting-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Rock, Bug, Dark. Fighting-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Fighting types do not have immunity against any move type.
+
+Flying-type moves:
+
+Super Effective Against (2x damage): Fighting, Bug, Grass. Flying-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Rock, Steel, Electric. Flying-type moves are less effective against these types.
+No Effect Against (0x damage): None. Flying-type moves can hit all types, though they may be less effective against some.
+Flying-type Pokémon defenses:
+
+Weak Against (2x damage from): Rock, Electric, Ice. Flying-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fighting, Bug, Grass. Flying-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Ground. Ground-type moves can't hit Flying-type Pokémon.
+
+Poison-type moves:
+
+Super Effective Against (2x damage): Grass, Fairy. Poison-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Poison, Ground, Rock, Ghost. Poison-type moves are less effective against these types.
+No Effect Against (0x damage): Steel. Poison-type moves cannot affect Steel-type Pokémon.
+Poison-type Pokémon defenses:
+
+Weak Against (2x damage from): Ground, Psychic. Poison-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fighting, Poison, Bug, Grass, Fairy. Poison-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Poison types do not have immunity against any move type.
+
+Ground-type moves:
+
+Super Effective Against (2x damage): Fire, Electric, Poison, Rock, Steel. Ground-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Bug, Grass. Ground-type moves are less effective against these types.
+No Effect Against (0x damage): Flying. Ground-type moves can't hit Flying-type Pokémon.
+Ground-type Pokémon defenses:
+
+Weak Against (2x damage from): Water, Grass, Ice. Ground-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Poison, Rock. Ground-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Electric. Ground-type Pokémon are completely immune to Electric-type moves.
+
+Rock-type moves:
+
+Super Effective Against (2x damage): Fire, Ice, Flying, Bug. Rock-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fighting, Ground, Steel. Rock-type moves are less effective against these types.
+No Effect Against (0x damage): None. Rock-type moves can affect all types, though they may be less effective against some.
+Rock-type Pokémon defenses:
+
+Weak Against (2x damage from): Water, Grass, Fighting, Ground, Steel. Rock-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Normal, Fire, Poison, Flying. Rock-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Rock types do not have immunity against any move type.
+
+Bug-type moves:
+
+Super Effective Against (2x damage): Grass, Psychic, Dark. Bug-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Fighting, Poison, Flying, Ghost, Steel, Fairy. Bug-type moves are less effective against these types.
+No Effect Against (0x damage): None. Bug-type moves can affect all types, though they may be less effective against some.
+Bug-type Pokémon defenses:
+
+Weak Against (2x damage from): Fire, Flying, Rock. Bug-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fighting, Ground, Grass. Bug-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Bug types do not have immunity against any move type.
+
+Ghost-type moves:
+
+Super Effective Against (2x damage): Ghost, Psychic. Ghost-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Dark. Ghost-type moves are less effective against Dark types.
+No Effect Against (0x damage): Normal. Ghost-type moves cannot affect Normal-type Pokémon.
+Ghost-type Pokémon defenses:
+
+Weak Against (2x damage from): Ghost, Dark. Ghost-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Poison, Bug. Ghost-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Normal, Fighting. Ghost-type Pokémon are completely immune to Normal and Fighting-type moves.
+
+Steel-type moves:
+
+Super Effective Against (2x damage): Ice, Rock, Fairy. Steel-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Water, Electric, Steel. Steel-type moves are less effective against these types.
+No Effect Against (0x damage): None. Steel-type moves can affect all types, though they may be less effective against some.
+Steel-type Pokémon defenses:
+
+Weak Against (2x damage from): Fire, Fighting, Ground. Steel-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Normal, Grass, Ice, Flying, Psychic, Bug, Rock, Dragon, Steel, Fairy. Steel-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Poison. Steel-type Pokémon are completely immune to Poison-type moves.
+
+Fire-type moves:
+
+Super Effective Against (2x damage): Grass, Ice, Bug, Steel. Fire-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Water, Rock, Dragon. Fire-type moves are less effective against these types.
+No Effect Against (0x damage): None. Fire-type moves can affect all types, though they may be less effective against some.
+Fire-type Pokémon defenses:
+
+Weak Against (2x damage from): Water, Ground, Rock. Fire-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fire, Grass, Ice, Bug, Steel, Fairy. Fire-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Fire types do not have immunity against any move type.
+
+Water-type moves:
+
+Super Effective Against (2x damage): Fire, Ground, Rock. Water-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Water, Grass, Dragon. Water-type moves are less effective against these types.
+No Effect Against (0x damage): None. Water-type moves can affect all types, though they may be less effective against some.
+Water-type Pokémon defenses:
+
+Weak Against (2x damage from): Electric, Grass. Water-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fire, Water, Ice, Steel. Water-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Water types do not have immunity against any move type.
+
+Grass-type moves:
+
+Super Effective Against (2x damage): Water, Ground, Rock. Grass-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Grass, Poison, Flying, Bug, Dragon, Steel. Grass-type moves are less effective against these types.
+No Effect Against (0x damage): None. Grass-type moves can affect all types, though they may be less effective against some.
+Grass-type Pokémon defenses:
+
+Weak Against (2x damage from): Fire, Ice, Poison, Flying, Bug. Grass-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Water, Grass, Electric, Ground. Grass-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Grass types do not have immunity against any move type.
+
+Electric-type moves:
+
+Super Effective Against (2x damage): Water, Flying. Electric-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Electric, Grass, Dragon. Electric-type moves are less effective against these types.
+No Effect Against (0x damage): Ground. Electric-type moves cannot affect Ground-type Pokémon.
+Electric-type Pokémon defenses:
+
+Weak Against (2x damage from): Ground. Electric-type Pokémon are vulnerable to Ground-type moves.
+Resistant Against (0.5x damage from): Electric, Flying, Steel. Electric-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Electric types do not have immunity against any move type.
+
+Psychic-type moves:
+
+Super Effective Against (2x damage): Fighting, Poison. Psychic-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Psychic, Steel. Psychic-type moves are less effective against these types.
+No Effect Against (0x damage): Dark. Psychic-type moves cannot affect Dark-type Pokémon.
+Psychic-type Pokémon defenses:
+
+Weak Against (2x damage from): Bug, Ghost, Dark. Psychic-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fighting, Psychic. Psychic-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Psychic types do not have immunity against any move type.
+
+Ice-type moves:
+
+Super Effective Against (2x damage): Grass, Ground, Flying, Dragon. Ice-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Water, Ice, Steel. Ice-type moves are less effective against these types.
+No Effect Against (0x damage): None. Ice-type moves can affect all types, though they may be less effective against some.
+Ice-type Pokémon defenses:
+
+Weak Against (2x damage from): Fire, Fighting, Rock, Steel. Ice-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Ice. Ice-type Pokémon have resistance to Ice-type moves.
+Immune Against (0x damage from): None. Ice types do not have immunity against any move type.
+
+Dragon-type moves:
+
+Super Effective Against (2x damage): Dragon. Dragon-type moves are particularly effective against Dragon-type Pokémon.
+Not Very Effective Against (0.5x damage): Steel. Dragon-type moves are less effective against Steel-type Pokémon.
+No Effect Against (0x damage): Fairy. Dragon-type moves cannot affect Fairy-type Pokémon.
+Dragon-type Pokémon defenses:
+
+Weak Against (2x damage from): Ice, Dragon, Fairy. Dragon-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fire, Water, Grass, Electric. Dragon-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): None. Dragon types do not have immunity against any move type.
+
+Dark-type moves:
+
+Super Effective Against (2x damage): Psychic, Ghost. Dark-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fighting, Dark, Fairy. Dark-type moves are less effective against these types.
+No Effect Against (0x damage): None. Dark-type moves can affect all types, though they may be less effective against some.
+Dark-type Pokémon defenses:
+
+Weak Against (2x damage from): Fighting, Bug, Fairy. Dark-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Ghost, Dark. Dark-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Psychic. Dark-type Pokémon are completely immune to Psychic-type moves.
+
+Fairy-type moves:
+
+Super Effective Against (2x damage): Fighting, Dragon, Dark. Fairy-type moves are particularly effective against these types.
+Not Very Effective Against (0.5x damage): Fire, Poison, Steel. Fairy-type moves are less effective against these types.
+No Effect Against (0x damage): None. Fairy-type moves can affect all types, though they may be less effective against some.
+Fairy-type Pokémon defenses:
+
+Weak Against (2x damage from): Poison, Steel. Fairy-type Pokémon are vulnerable to moves of these types.
+Resistant Against (0.5x damage from): Fighting, Bug, Dark. Fairy-type Pokémon have resistance to moves of these types.
+Immune Against (0x damage from): Dragon. Fairy-type Pokémon are completely immune to Dragon-type moves.
+
+
+To calculate the damage multiplier for Pokémon with two types, you need to consider the effectiveness of the move against both of the Pokémon's types and then multiply these effectiveness values together. Here's how to do it:
+
+Determine the Effectiveness Against Each Type:
+
+Each type has a multiplier based on the move's effectiveness: Super Effective (2x), Not Very Effective (0.5x), No Effect (0x), or Neutral (1x).
+For example, a Fire-type move has a 2x multiplier against Grass but a 0.5x multiplier against Dragon.
+Multiply the Multipliers Together:
+
+If a Pokémon has two types, multiply the effectiveness multipliers for each type together to get the overall multiplier.
+For instance, if a Fire-type move is used against a Grass/Dragon Pokémon, you multiply 2x (against Grass) by 0.5x (against Dragon), resulting in an overall multiplier of 1x.
+Apply the Overall Multiplier:
+
+The final multiplier is applied to the move's base damage to calculate the total damage done to the dual-type Pokémon.
+Remember that immunities take precedence. If a move has no effect against one of the Pokémon's types (0x multiplier), the overall multiplier will be 0x, regardless of its effectiveness against the other type.
+
