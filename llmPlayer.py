@@ -281,6 +281,7 @@ class LLMPlayer(Player):
                 thread_id=self.thread.id,
                 assistant_id=self.assistant.id,
                 )
+                waitCount = 0
                 while(True):
                     run = self.client.beta.threads.runs.retrieve(
                     thread_id=self.thread.id,
@@ -289,8 +290,13 @@ class LLMPlayer(Player):
                     if(run.status == "completed"):
                         break
                     else:
+                        waitCount += 1
+                        if(waitCount > 20):
+                            print("Timeout!")
+                            return self.choose_random_move(battle)
+
                         print("Waiting...")
-                        time.sleep(1)
+                        time.sleep(2)
 
                 messages = self.client.beta.threads.messages.list(
                     thread_id=self.thread.id
@@ -298,7 +304,7 @@ class LLMPlayer(Player):
                 if(not os.path.exists("prompts/" + battle._battle_tag + "/") ):
                     os.mkdir("prompts/" + battle._battle_tag + "/")
 
-                with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+") as f:
+                with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+", encoding='utf-8') as f:
                     f.write(prompt + "\n" + messages.data[0].content[0].text.value)
 
                                 
