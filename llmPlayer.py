@@ -183,10 +183,11 @@ class LLMPlayer(Player):
                 #print(moveChoice, move.id)
                 if(findSimilar(moveChoice, move.id)):
                     print("Found move:", move.id)
-                    if(battle.can_dynamax and actionObject["dynamax"]):
-                        return self.create_order(move, dynamax=True)
-                    else:
+                    # Safety for avoiding dynamaxing when you can't
+                    if(not battle.can_dynamax and not battle.active_pokemon.is_dynamaxed):
                         return self.create_order(move, dynamax=False)
+                    else:
+                        return self.create_order(move, dynamax=actionObject["dynamax"])
         else:
             switchChoice = actionObject["pokemon"].lower().replace(" ", "").replace("-", "") + " "
             for pokemon in battle.available_switches:
