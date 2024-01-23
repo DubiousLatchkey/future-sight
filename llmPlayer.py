@@ -1,5 +1,6 @@
 import BattleUtilities
 from poke_env.player.player import Player
+from poke_env.environment import AbstractBattle
 from config import api_key
 from openai import OpenAI
 from poke_env.environment.pokemon import Pokemon
@@ -173,7 +174,7 @@ class LLMPlayer(Player):
         print("No action found in response")
         return self.choose_random_move(battle)
     
-    def getMoveFromJSON(self, jsonObject, battle):
+    def getMoveFromJSON(self, jsonObject, battle : AbstractBattle):
         actionObject = jsonObject
 
         if(actionObject["action_type"] == "move"):
@@ -182,7 +183,10 @@ class LLMPlayer(Player):
                 #print(moveChoice, move.id)
                 if(findSimilar(moveChoice, move.id)):
                     print("Found move:", move.id)
-                    return self.create_order(move, dynamax=actionObject["dynamax"])
+                    if(battle.can_dynamax and actionObject["dynamax"]):
+                        return self.create_order(move, dynamax=True)
+                    else:
+                        return self.create_order(move, dynamax=False)
         else:
             switchChoice = actionObject["pokemon"].lower().replace(" ", "").replace("-", "") + " "
             for pokemon in battle.available_switches:
@@ -282,6 +286,7 @@ class LLMPlayer(Player):
                 assistant_id=self.assistant.id,
                 )
                 waitCount = 0
+                time.sleep(3)
                 while(True):
                     run = self.client.beta.threads.runs.retrieve(
                     thread_id=self.thread.id,
@@ -290,12 +295,21 @@ class LLMPlayer(Player):
                     if(run.status == "completed"):
                         break
                     else:
+                        print(run.status)
+                        if(run.status != "in_progress" and run.status != "queued"):
+                            print("erroring out, doing random for rest of run")
+                            self.tried = True
+                            return self.choose_random_move(battle)
                         waitCount += 1
-                        if(waitCount > 20):
+                        if(waitCount > 25):
                             print("Timeout!")
+                            try:
+                                self.client.beta.threads.runs.cancel(thread_id=self.thread.id, run_id=run.id)
+                            except:
+                                print("problem cancelling, likely just completed")
                             return self.choose_random_move(battle)
 
-                        print("Waiting...")
+                        #print("Waiting...")
                         time.sleep(2)
 
                 messages = self.client.beta.threads.messages.list(
