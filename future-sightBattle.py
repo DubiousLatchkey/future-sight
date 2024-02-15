@@ -18,10 +18,10 @@ async def main():
 
     # We create two players.
     random_player = MinimaxPlayer(
-        battle_format="gen8randombattle", use_random=False
+        battle_format="gen9randombattle", use_random=False
     )
-    nnPlayer = LLMPlayer(
-        battle_format="gen8randombattle"
+    nnPlayer = NNPlayer(
+        battle_format="gen9randombattle"
     )
 
     # Now, let's evaluate our player
@@ -29,7 +29,7 @@ async def main():
     await nnPlayer.battle_against(random_player, n_battles=battles)
 
     print(
-        "LLM player won %d / %d battles [this took %f seconds]"
+        "NN player won %d / %d battles [this took %f seconds]"
         % (
             nnPlayer.n_won_battles, battles, time.time() - start
         )

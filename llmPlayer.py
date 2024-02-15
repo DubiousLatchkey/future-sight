@@ -73,7 +73,7 @@ class LLMPlayer(Player):
         # Assistants require getting the asssistant and making a thread
         if(usingAssistant):
             self.assistant = self.client.beta.assistants.retrieve( assistant_id="asst_1vXPZEKgnSDRaesCCXkFiFom")
-            self.thread = self.client.beta.threads.create()
+            
         
 
     def convertPartyPokemonToPrompt(self, identifier: str, pokemon: Pokemon):
@@ -276,6 +276,8 @@ class LLMPlayer(Player):
             #self.tried = True
             if(self.usingAssistant):
                 #Use assistant
+                # Make new thread to avoid rate limit
+                self.thread = self.client.beta.threads.create()
                 message = self.client.beta.threads.messages.create(
                     thread_id=self.thread.id,
                     role="user",
@@ -302,10 +304,11 @@ class LLMPlayer(Player):
                             self.tried = True
                             return self.choose_random_move(battle)
                         waitCount += 1
-                        if(waitCount > 25):
+                        if(waitCount > 50):
                             print("Timeout!")
                             try:
                                 self.client.beta.threads.runs.cancel(thread_id=self.thread.id, run_id=run.id)
+                                time.sleep(2)
                             except:
                                 print("problem cancelling, likely just completed")
                             return self.choose_random_move(battle)
@@ -322,11 +325,18 @@ class LLMPlayer(Player):
                 with open("prompts/" + battle._battle_tag + "/" + battle.player_username + "_" + str(battle._turn) + ".txt", "w+", encoding='utf-8') as f:
                     f.write(prompt + "\n" + messages.data[0].content[0].text.value)
 
-                                
+                
                 rawString = messages.data[0].content[0].text.value
-                startIndex = rawString.index("```json")
-                endIndex = rawString[startIndex + 7:].index("```")
-                data = json.loads(rawString[startIndex + 7: startIndex + 7 + endIndex])
+                try:
+                    startIndex = rawString.index("```json")
+                    endIndex = rawString[startIndex + 7:].index("```")
+                    data = json.loads(rawString[startIndex + 7: startIndex + 7 + endIndex])
+                except:
+                    try:
+                        data = json.loads(rawString)
+                    except:
+                        print("no json detected")
+                        return self.choose_random_move(battle)
 
                 return self.getMoveFromJSON(jsonObject=data, battle=battle)
             else:

@@ -79,7 +79,7 @@ class ActionPredictionModel(nn.Module):
         
 
         self.fc1 = nn.Linear(
-            in_features=7860,
+            in_features=8244,
             out_features= 5000
         )
         self.fc2 = nn.Linear(
@@ -104,11 +104,15 @@ class NNPlayer(Player):
     def __init__(self, battle_format):
         super().__init__(battle_format=battle_format)
 
-        self.model = ActionPredictionModel(transform=self.processGameStateIntoMLFormat)
+        self.model = ActionPredictionModel()
 
         with open("pokemonToId.pickle", "rb") as f:
+            # Currently missing alcremie forms, probably because poke_env registers species name as cosmetic form first
             self.pokemonToId = pickle.load(f)
+            #print(len(self.pokemonToId), self.pokemonToId)
         
+        self.idToPokemon = {v: k for k, v in self.pokemonToId.items()}
+
         pokemonEmbeddingModel = Pokemon_SkipGram_Model(vocab_size=len(self.pokemonToId.keys())).to(device)
         pokemonEmbeddingModel.load_state_dict(torch.load("pokemonModel.pt"))
         self.pokemonEmbeddingModel = pokemonEmbeddingModel.linear.weight.cpu().detach().numpy()
@@ -123,10 +127,11 @@ class NNPlayer(Player):
                 self.moveToIndex[i] = count
                 count += 1
             self.moveToIndex["<unk>"] = 0
+        self.indexToMove = {v: k for k, v in self.moveToIndex.items()}
 
         moveEmbeddingModel = Move_SkipGram_Model(len(self.moveToIndex.keys())).to(device)
         moveEmbeddingModel.load_state_dict(torch.load("moveModel.pt"))
-        self.moveEmbeddingModel = moveEmbeddingModel.linear.weight.cpu().detach().numpy()
+        self.moveEmbeddingModel = moveEmbeddingModel.linear.weight.cpu().detach()
 
         self.moveDistMatrix = self.get_distance_matrix(self.moveEmbeddingModel, 'cosine')
 
@@ -172,8 +177,8 @@ class NNPlayer(Player):
         #print(self.itemToIndex, len(self.itemToIndex.items()))
 
         self.itemEmbedding = nn.Embedding(
-            num_embeddings=32,
-            embedding_dim=len(self.itemToIndex.items()),
+            num_embeddings=len(self.itemToIndex.items()),
+            embedding_dim=32,
             max_norm=1
         )
 
@@ -205,7 +210,7 @@ class NNPlayer(Player):
     def processPokemon(self, pokemon: Pokemon):
         # Pokemon name, moves, active, status, gender, boosts
         if(pokemon):
-            pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId[pokemon.species]])
+            pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId.get(pokemon.species, 0)])
             moves = sorted([i[1] for i in pokemon.moves.items()], key= lambda x: x.id)
             move1 = self.moveEmbeddingModel[self.moveToIndex[moves[0].id]] if len(moves) > 0 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
             move2 = self.moveEmbeddingModel[self.moveToIndex[moves[1].id]] if len(moves) > 1 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
@@ -213,10 +218,10 @@ class NNPlayer(Player):
             move4 = self.moveEmbeddingModel[self.moveToIndex[moves[3].id]] if len(moves) > 3 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
 
             # convert moves to tensors from numpy
-            move1 = torch.from_numpy(move1)
-            move2 = torch.from_numpy(move2)
-            move3 = torch.from_numpy(move3)
-            move4 = torch.from_numpy(move4)
+            # move1 = torch.from_numpy(move1)
+            # move2 = torch.from_numpy(move2)
+            # move3 = torch.from_numpy(move3)
+            # move4 = torch.from_numpy(move4)
 
 
             active = torch.tensor([pokemon.active], dtype=torch.int16)
@@ -242,10 +247,10 @@ class NNPlayer(Player):
 
         else:
             pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId["<unk>"]])
-            move1 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move2 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move3 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move4 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
+            move1 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move2 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move3 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move4 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
             active = torch.tensor([False], dtype=torch.int16)
 
             status = self.statusEmbedding(torch.tensor(7, dtype=torch.long))
@@ -266,11 +271,11 @@ class NNPlayer(Player):
 
             #print(pokemonData.shape, hp.shape, move1.shape, move2.shape, move3.shape, move4.shape, active.shape, status.shape, gender.shape, atkBoost.shape, defBoost.shape, spaBoost.shape, spdBoost.shape, speBoost.shape, accuracyBoost.shape, evasionBoost.shape, hp.shape)
         
-        return torch.concatenate((pokemonData, hp, move1, move2, move3, move4, active, status, gender, atkBoost, defBoost, spaBoost, spdBoost, speBoost, accuracyBoost, evasionBoost, item), dim=1)
+        return torch.concatenate((pokemonData, hp, move1, move2, move3, move4, active, status, gender, atkBoost, defBoost, spaBoost, spdBoost, speBoost, accuracyBoost, evasionBoost, item), dim=0)
 
     def processPokemonDict(self, pokemon):
         if(pokemon):
-            pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId[pokemon.species]])
+            pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId.get(pokemon.species, 0)])
             moves = sorted([i[1] for i in pokemon["moves"]])
             move1 = self.moveEmbeddingModel[self.moveToIndex[moves[0].id]] if len(moves) > 0 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
             move2 = self.moveEmbeddingModel[self.moveToIndex[moves[1].id]] if len(moves) > 1 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
@@ -278,10 +283,10 @@ class NNPlayer(Player):
             move4 = self.moveEmbeddingModel[self.moveToIndex[moves[3].id]] if len(moves) > 3 else self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
 
             # convert moves to tensors from numpy
-            move1 = torch.from_numpy(move1)
-            move2 = torch.from_numpy(move2)
-            move3 = torch.from_numpy(move3)
-            move4 = torch.from_numpy(move4)
+            # move1 = torch.from_numpy(move1)
+            # move2 = torch.from_numpy(move2)
+            # move3 = torch.from_numpy(move3)
+            # move4 = torch.from_numpy(move4)
 
 
             active = torch.tensor([pokemon.active], dtype=torch.int16)
@@ -307,10 +312,10 @@ class NNPlayer(Player):
 
         else:
             pokemonData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId["<unk>"]])
-            move1 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move2 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move3 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
-            move4 = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex["<unk>"]])
+            move1 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move2 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move3 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
+            move4 = self.moveEmbeddingModel[self.moveToIndex["<unk>"]]
             active = torch.tensor([False], dtype=torch.int16)
 
             status = self.statusEmbedding(torch.tensor(7, dtype=torch.long))
@@ -369,10 +374,10 @@ class NNPlayer(Player):
         moveOrSwitch = torch.tensor(1) if gameState["action_type"] == "switch" else torch.tensor(0)
         if(moveOrSwitch):
             # it's a switch, encode pokemon
-            actionData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId[gameState["action"]]])
+            actionData = torch.from_numpy(self.pokemonEmbeddingModel[self.pokemonToId.get(gameState["action"], 0)])
         else:
             # it's a move, encode move 
-            actionData = torch.from_numpy(self.moveEmbeddingModel[self.moveToIndex[gameState["action"]]])
+            actionData = self.moveEmbeddingModel[self.moveToIndex[gameState["action"]]]
 
         y = torch.concatenate((moveOrSwitch, terrastallize, actionData))
 
@@ -401,7 +406,7 @@ class NNPlayer(Player):
         # Concat with Conditions
         x = torch.concatenate((pokemon1, pokemon2, pokemon3, pokemon4, pokemon5, pokemon6, opponentPokemon1, opponentPokemon2, opponentPokemon3, opponentPokemon4, opponentPokemon5, opponentPokemon6))
 
-
+        #print(x.shape)
         x = self.model(x)
 
         return x
@@ -410,29 +415,89 @@ class NNPlayer(Player):
         dist_matrix = distance.squareform(distance.pdist(wordvecs, metric))
         return dist_matrix
 
-    def evaluateNNOutput(self, outputTensor, correctAnswer=None):
+    def evaluateNNOutput(self, outputTensor, correctAnswer=None, battle : AbstractBattle = None):
+        #with open("outputTensorTest.pickle", "wb") as f:
+        #    pickle.dump(outputTensor, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+        moveOrSwitch = int(outputTensor[0] > 1 - outputTensor[0] )
+        actionNPArray = outputTensor[2:].detach().numpy()
         if(correctAnswer):
-            moveOrSwitch = int(outputTensor[0] > 1 - outputTensor[0] )
             if( moveOrSwitch != correctAnswer[0]):
                 # you chose poorly
                 return False
-            else:
-                # you chose correctly
-                terrasallize = int(outputTensor[1] > 1 - outputTensor[1] )
-                if(terrasallize != correctAnswer[1]):
-                    return False
-                else:
-                    #check pokemon or move
-                    if(moveOrSwitch == 0):
-                        # check move
-                        distancesFromChoice = distance.cdist(outputTensor[2:], correctAnswer[2:], 'cosine')
-                        
-
-                        
             
+        terrasallize = int(outputTensor[1] > 1 - outputTensor[1] )
+        if(correctAnswer and terrasallize != correctAnswer[1]):
+            return False
+        else:
+            #check pokemon or move
+            if(moveOrSwitch == 0):
+                # get all move options and appropriate embeddings
+                cosineDistances = []
+                #for embedding in self.moveEmbeddingModel:
+                    # compare output to embeddings
+                    #cosineDistances.append(distance.cdist(torch.tensor([outputTensor[2:]]), torch.tensor([embedding]), 'cosine'))
+                cosineDistances = distance.cdist(torch.tensor(np.array([actionNPArray])), self.moveEmbeddingModel, 'cosine')
 
+                if(not correctAnswer):
+                    # There is no correct answer, find the indices of the moves of the pokemon and just argmin those
 
+                    movesPokemonKnows = []
+                    moveNamesPokemonKnows = []
+                    for move in battle.active_pokemon.moves.values():
+                        moveIndex = self.moveToIndex.get(move.id, 0)
+                        movesPokemonKnows.append(cosineDistances[0][moveIndex])
+                        moveNamesPokemonKnows.append(move.id)
+
+                    moveChosenIndex = np.argmin(np.array(movesPokemonKnows))
+                    moveChosenName = moveNamesPokemonKnows[moveChosenIndex]
+                    print(moveChosenName)
+                    return moveOrSwitch, terrasallize, moveChosenName
+
+                # Get closest move, see if it matches actual chosen
+                moveChosenIndex = np.argmin(np.array(cosineDistances))
+                correctMoveIndex = self.moveEmbeddingModel.index(correctAnswer[2:])
+
+                # check move
+                if(moveChosenIndex == correctMoveIndex):
+                    return True
+                else:
+                    return False
+                
+            else:
+                # It's a switch, check pokemon instead
+                cosineDistances = []
+                #for embedding in self.pokemonEmbeddingModel:
+                    # compare output to embeddings
+                    #cosineDistances.append(distance.cdist(torch.tensor([outputTensor[2:]]), torch.tensor([embedding]), 'cosine'))
+                cosineDistances = distance.cdist(torch.tensor(np.array([actionNPArray])), self.pokemonEmbeddingModel, 'cosine')
+                
+                # Get closest move, see if it matches actual chosen
+                pokemonChosenIndex = np.argmin(np.array(cosineDistances))
+
+                if(not correctAnswer):
+                    availablePokemon = []
+                    availablePokemonNames = []
+                    for pokemon in battle.team.values():
+                        if(not pokemon.active):
+                            pokemonIndex = self.pokemonToId.get(pokemon.species, 0)
+                            availablePokemon.append(cosineDistances[0][pokemonIndex])
+                            availablePokemonNames.append(pokemon.species)
+
+                    pokemonChosenIndex = np.argmin(np.array(availablePokemon))
+                    pokemonChosenName = availablePokemonNames[pokemonIndex]
+                    #pokemonChosenName = self.idToPokemon[pokemonChosenIndex]
+                    print(pokemonChosenName)
+                    return moveOrSwitch, terrasallize, pokemonChosenName
+
+                correctPokemonIndex = self.pokemonEmbeddingModel.index(correctAnswer[2:])
+
+                # check move
+                if(pokemonChosenIndex == correctPokemonIndex):
+                    return True
+                else:
+                    return False
+                            
     
     def train(training_dataloader, validation_dataloader, model, loss_function, optimizer, epochs):
         validation_losses = []
@@ -490,19 +555,37 @@ class NNPlayer(Player):
         
         y = self.runInference(battle)
         #print(y)
-        print(y.shape)
+        #print(y.shape)
 
         # y[0] is move or switch
         # y[1] is terrastallize
         # y[2:130] is move/pokemon
 
+        moveOrSwitch, terrastalize, actionName = self.evaluateNNOutput(y, battle=battle)
 
+        if(moveOrSwitch == 0):
+            # It's a move, create order
+            for move in battle.available_moves:
+                if(move.id == actionName):
+                    print("move: ", move.id)
+                    if(not battle.can_tera):
+                        return self.create_order(order=move, terastallize=False)
+                    else:
+                        return self.create_order(order=move, terastallize=terrastalize)
+        else:
+            # It's a switch, create order
+            for pokemon in battle.available_switches:
+                if(pokemon.id == actionName):
+                    print("switch:", pokemon.id)
+                    return self.create_order(order=pokemon)
+
+        # No move or pokemon found
         return self.choose_random_move(battle)
     
 
 if(__name__ == "__main__"):
     # print("loading dataset")
-    # dataset = ActionPredictionDataset(useFile=True)
+    # dataset = ActionPredictionDataset(transform=processGameStateIntoMLFormat, useFile=True)
     # print("done loading")
 
     NNPlayer = NNPlayer(battle_format="gen9randombattle")

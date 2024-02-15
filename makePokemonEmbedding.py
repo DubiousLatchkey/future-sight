@@ -55,11 +55,12 @@ class PokemonTeamsDataSet(Dataset):
                 self.uniquePokemon = self.uniquePokemon.union(set(team))
                 teams.append(team)
 
-        count = 1
-        for pokemon in sorted(list(self.uniquePokemon)):
-            pokemonToId[pokemon] = count
-            count += 1
-        pokemonToId["<unk>"] = 0
+        #pokemonToId = makePokemonToIDmapping()
+        count = len(pokemonToId.keys())
+        for i in self.uniquePokemon:
+            if(i not in pokemonToId):
+                pokemonToId[i] = count
+                count += 1
 
         
         for i in pokemonToId.items():
@@ -145,6 +146,18 @@ def get_k_similar_words(word, dist_matrix, k=10):
     out = [(i, idToPokemon[i], dists[i]) for i in ind]
     return out
     
+def makePokemonToIDmapping():
+    with open("pokemon-showdown/data/random-sets.json", "r") as f:
+        data = json.load(f)
+    
+    pokemonToId.clear()
+    count = 1
+    for pokemon in sorted(data.keys()):
+        #print(pokemon)
+        pokemonToId[pokemon] = count
+        count += 1
+    pokemonToId["<unk>"] = 0
+    
 
 if __name__ == "__main__":
     torch.manual_seed(1)
@@ -152,7 +165,7 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('Using {} device'.format(device))
 
-
+    makePokemonToIDmapping()
 
     dataset = PokemonTeamsDataSet()
     print("Number of pokemon forms:", len(pokemonToId.keys()))
