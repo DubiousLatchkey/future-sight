@@ -203,7 +203,7 @@ class NNPlayer(Player):
             max_norm=1
         )
 
-        
+        self.switchesInARow = 0
 
         
 
@@ -420,7 +420,10 @@ class NNPlayer(Player):
         #    pickle.dump(outputTensor, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         moveOrSwitch = int(outputTensor[0] > 1 - outputTensor[0] )
-        actionNPArray = outputTensor[2:].detach().numpy()
+        if(type(outputTensor) == type(torch.zeros(1))):
+            actionNPArray = outputTensor[2:].detach().numpy()
+        else:
+            actionNPArray = np.array(outputTensor[2:])
         if(correctAnswer):
             if( moveOrSwitch != correctAnswer[0]):
                 # you chose poorly
@@ -451,7 +454,7 @@ class NNPlayer(Player):
 
                     moveChosenIndex = np.argmin(np.array(movesPokemonKnows))
                     moveChosenName = moveNamesPokemonKnows[moveChosenIndex]
-                    print(moveChosenName)
+                    #print(moveChosenName)
                     return moveOrSwitch, terrasallize, moveChosenName
 
                 # Get closest move, see if it matches actual chosen
@@ -485,9 +488,9 @@ class NNPlayer(Player):
                             availablePokemonNames.append(pokemon.species)
 
                     pokemonChosenIndex = np.argmin(np.array(availablePokemon))
-                    pokemonChosenName = availablePokemonNames[pokemonIndex]
+                    pokemonChosenName = availablePokemonNames[pokemonChosenIndex]
                     #pokemonChosenName = self.idToPokemon[pokemonChosenIndex]
-                    print(pokemonChosenName)
+                    #print(pokemonChosenName)
                     return moveOrSwitch, terrasallize, pokemonChosenName
 
                 correctPokemonIndex = self.pokemonEmbeddingModel.index(correctAnswer[2:])
@@ -563,20 +566,26 @@ class NNPlayer(Player):
 
         moveOrSwitch, terrastalize, actionName = self.evaluateNNOutput(y, battle=battle)
 
+        # Safeguard against reaching turn limit from 2 dumb ais
+        if(self.switchesInARow >= 30):
+            return self.choose_random_move(battle)
+
         if(moveOrSwitch == 0):
             # It's a move, create order
+            self.switchesInARow = 0
             for move in battle.available_moves:
                 if(move.id == actionName):
-                    print("move: ", move.id)
+                    #print("move: ", move.id)
                     if(not battle.can_tera):
                         return self.create_order(order=move, terastallize=False)
                     else:
                         return self.create_order(order=move, terastallize=terrastalize)
         else:
             # It's a switch, create order
+            self.switchesInARow += 1
             for pokemon in battle.available_switches:
-                if(pokemon.id == actionName):
-                    print("switch:", pokemon.id)
+                if(pokemon.species == actionName):
+                    #print("switch:", pokemon.id)
                     return self.create_order(order=pokemon)
 
         # No move or pokemon found

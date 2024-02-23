@@ -171,4 +171,5 @@ checkpoints/
 
 pokemonBattleData.pickle
 outputTensorTest.pickle
-neat-checkpoint-.*
+neat-checkpoint-*
+modelImages/
