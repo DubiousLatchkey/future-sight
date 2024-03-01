@@ -173,3 +173,4 @@ pokemonBattleData.pickle
 outputTensorTest.pickle
 neat-checkpoint-*
 modelImages/
+actionPredictionModel*

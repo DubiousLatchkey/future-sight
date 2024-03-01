@@ -4,7 +4,7 @@ from NNPlayer import NNPlayer
 import torch
 import asyncio
 import random
-from minimaxPlayer import MinimaxPlayer
+from poke_env.player import SimpleHeuristicsPlayer
 import graphviz
 import warnings
 import datetime
@@ -114,6 +114,7 @@ class NEATPlayer(NNPlayer):
         #print(x.shape)
 
         # This is hacked together, so forget making non torch version of the previous encoding
+        x = x[:8244]
         x = self.NEATModel.activate(x.detach().numpy())
 
         return x
@@ -187,6 +188,7 @@ def evaluate_genomes(genomes, config):
     #     print("matchups:", matchups)
     #     asyncio.get_event_loop().run_until_complete(battles(coroutines))
     
+    print("*** Beginning Tournament ***")
     
     # Run single elim tournament
     playerIndexes = [i for i in range(len(players))]
@@ -237,11 +239,11 @@ def evaluate_genomes(genomes, config):
         draw_net(config=config, genome=genomesList[playerIndexes[0]], filename= "modelImages/" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".gv")
 
     # Top players get additional chances against heuristic players
-    minimaxPlayers = []
+    referencePlayers = []
     coroutines = []
     for topPlayerIndex in topPlayers:
-        minimaxPlayers.append(MinimaxPlayer(battle_format="gen9randombattle", use_random=False))
-        coroutines.append(battle(players[topPlayerIndex], minimaxPlayers[-1], 10))
+        referencePlayers.append(SimpleHeuristicsPlayer(battle_format="gen9randombattle"))
+        coroutines.append(battle(players[topPlayerIndex], referencePlayers[-1], 10))
 
     asyncio.get_event_loop().run_until_complete(battles(coroutines))
 
@@ -259,17 +261,17 @@ def main():
     )
 
     # make models
-    #population = neat.Population(config)
-    population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
+    population = neat.Population(config)
+    #population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-65")
 
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
 
-    population.add_reporter(neat.Checkpointer(1, 900))
+    population.add_reporter(neat.Checkpointer(1))
 
     # run training
-    best = population.run(evaluate_genomes, 20)
+    best = population.run(evaluate_genomes)
 
 
     # evaluate
