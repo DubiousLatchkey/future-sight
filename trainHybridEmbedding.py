@@ -81,6 +81,7 @@ def plot_tsne_embeddings(model, output_filename="embedding_tsne.png"):
     plt.savefig(output_filename)
     plt.show()
     print(f"t-SNE plot saved as {output_filename}")
+    print("vocab size:",len(words))
 
 def main():
     # Define the directory containing your space-separated sentence files.

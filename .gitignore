@@ -174,3 +174,5 @@ outputTensorTest.pickle
 neat-checkpoint-*
 modelImages/
 actionPredictionModel*
+
+replays/*
