@@ -17,7 +17,7 @@ iterations = args.iterations
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 agent = Agent()
-agent.load_model("checkpoints/model_epoch_30000.pth")
+agent.load_model("checkpoints/model_epoch_1000.pth")
 
 agent2 = Agent()
 agent2.load_model("checkpoints/model_epoch_100.pth")
@@ -28,7 +28,7 @@ async def battle():
     battles = 100
 
     player3 = RandomPlayer(battle_format="gen9randombattle")
-    await player.battle_against(player2, n_battles=battles)
+    await player.battle_against(player3, n_battles=battles)
 
     print(
         "Trained player won %d / %d battles against less trained"
